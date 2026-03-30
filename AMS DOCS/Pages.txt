@@ -1,0 +1,28 @@
+MAIN
+  → Dashboard
+
+ASSETS
+  → Asset Register
+  → Add New Asset
+
+QR
+  → QR Scanner
+  → Print QR Labels
+
+OPERATIONS
+  → Verification (Audit)
+  → Transfers
+  → Disposals
+
+FINANCE
+  → Depreciation
+  → AMC & Insurance
+
+REPORTS
+  → Reports
+
+ADMIN
+  → Master Data
+  → User Management
+  → Audit Logs
+  → Settings
