@@ -7,11 +7,6 @@ import { success, error } from "../utils/responseHelper.js";
 import { logAudit, getRequestMeta } from "../utils/auditLogger.js";
 import { uploadProfilePhoto } from "../middleware/upload.middleware.js";
 
-// ─── Helper: build public URL from multer filename ────────────────────────────
-// req.file.path is an absolute disk path — unusable as a URL.
-// req.file.filename is just "user-1-1234567890.jpg" — safe to embed.
-// Express serves:  app.use("/uploads", express.static("<project-root>/uploads"))
-// So the public URL becomes:  /uploads/profile-photos/user-1-1234567890.jpg
 const toPublicUrl = (filename) => {
   if (!filename) return null;
   return `/uploads/profile-photos/${filename}`;
@@ -170,7 +165,8 @@ export const login = async (req, res) => {
       "Login successful",
     );
   } catch (err) {
-    console.error("Login error:", err.message);
+    // ── TEMPORARY: full error dump to find root cause ──
+    console.error("🔴 Login error FULL:", err);
     return error(res, "Login failed. Please try again.");
   }
 };
@@ -186,10 +182,7 @@ export const getMe = async (req, res) => {
   }
 };
 
-// ── PUT /users/me ─────────────────────────────────────────────────────────────
-// Handles multipart/form-data (with optional photo) via uploadProfilePhoto middleware.
-// Route registration example in user.routes.js:
-//   router.put("/me", authenticate, uploadProfilePhoto.single("photo"), updateMe);
+// ─────────────────────────────────────────────────────────────────────────────
 export const updateMe = async (req, res) => {
   try {
     const { fullName, phone } = req.body;
@@ -198,19 +191,13 @@ export const updateMe = async (req, res) => {
       return error(res, "Full name is required", 400);
     }
 
-    // Determine the new photo URL:
-    //   • req.file present  → new upload, build URL
-    //   • body.remove_photo === "true" → user explicitly removed photo, set null
-    //   • otherwise → leave unchanged (re-fetch current value)
     let profilePhotoUrl;
 
     if (req.file) {
-      // multer saved the file; build the public URL from filename only
       profilePhotoUrl = toPublicUrl(req.file.filename);
     } else if (req.body.remove_photo === "true") {
       profilePhotoUrl = null;
     } else {
-      // No change to photo — read current value from DB so we don't wipe it
       const current = await UserModel.findById(req.user.id);
       profilePhotoUrl = current?.profile_photo_url ?? null;
     }
@@ -244,7 +231,7 @@ export const updateMe = async (req, res) => {
   }
 };
 
-// ── PUT /users/me/password ────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 export const changeMyPassword = async (req, res) => {
   try {
     const { current_password, new_password, confirm_password } = req.body;
