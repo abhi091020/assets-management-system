@@ -60,7 +60,7 @@ export default function EmployeesPage() {
   }
 
   function confirmToggleStatus(emp) {
-    const active = emp.is_active;
+    const active = emp.is_active === true || emp.is_active === 1;
     setConfirm({
       title: active ? "Deactivate Employee?" : "Activate Employee?",
       message: active
@@ -77,7 +77,8 @@ export default function EmployeesPage() {
   }
 
   function confirmDelete(emp) {
-    openDeleteModal(emp);
+    // ✅ Fix: removed openDeleteModal(emp) — was causing stale closure
+    // Pass emp.id directly so closure always has the correct id
     setConfirm({
       title: "Delete Employee?",
       message: "Employee will be soft deleted. Assigned assets remain intact.",
@@ -86,7 +87,7 @@ export default function EmployeesPage() {
       confirmColor: "red",
       onConfirm: () => {
         closeConfirm();
-        handleDelete();
+        handleDelete(emp.id); // ✅ id captured directly, never stale
       },
     });
   }

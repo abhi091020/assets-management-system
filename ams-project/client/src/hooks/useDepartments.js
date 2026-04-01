@@ -191,10 +191,12 @@ export function useDepartments() {
     setDeletingDepartment(dept);
   }
 
-  async function handleDelete() {
-    if (!deletingDepartment) return;
+  // ✅ Fix: accepts deptId directly — avoids stale closure on deletingDepartment
+  async function handleDelete(deptId) {
+    const id = deptId ?? deletingDepartment?.id;
+    if (!id) return;
     setDeleting(true);
-    const res = await deleteDepartmentApi(deletingDepartment.id);
+    const res = await deleteDepartmentApi(id);
     if (res.success) {
       toast.success("Department deleted");
       setDeletingDepartment(null);

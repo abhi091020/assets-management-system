@@ -182,10 +182,11 @@ export function useLocations() {
     setDeletingLocation(loc);
   }
 
-  async function handleDelete() {
-    if (!deletingLocation) return;
-    setDeleting(true);
-    const res = await deleteLocationApi(deletingLocation.id);
+  async function handleDelete(locId) {
+  const id = locId ?? deletingLocation?.id;
+  if (!id) return;
+  setDeleting(true);
+  const res = await deleteLocationApi(id);
     if (res.success) {
       toast.success("Location deleted");
       setDeletingLocation(null);

@@ -20,26 +20,29 @@ const INITIAL_FORM = {
   asset_name: "",
   description: "",
   category_id: "",
+  asset_type: "",
   location_id: "",
   department_id: "",
   assigned_employee_id: "",
   purchase_date: "",
   purchase_cost: "",
+  depreciation_method: "",
+  useful_life_years: "",
   vendor: "",
   invoice_number: "",
   invoice_date: "",
   scrap_value: "",
-  warranty_expiry: "", // ★ Added — known at purchase time
+  warranty_expiry: "",
   serial_number: "",
   model_number: "",
   brand: "",
   color: "",
-  condition: "New", // Always New for a brand-new asset
-  status: "Active", // Always Active on creation
+  condition: "New",
+  status: "Active",
   insurance_policy_no: "",
   insurance_company: "",
   insurance_expiry_date: "",
-  amc_vendor: "", // Edit-only in form — kept in state for edit flow
+  amc_vendor: "",
   amc_expiry_date: "",
 };
 
@@ -58,16 +61,19 @@ function assetToForm(asset) {
     asset_name: asset.asset_name || "",
     description: asset.description || "",
     category_id: asset.category_id || "",
+    asset_type: asset.asset_type || "",
     location_id: asset.location_id || "",
     department_id: asset.department_id || "",
     assigned_employee_id: asset.assigned_employee_id || "",
     purchase_date: asset.purchase_date?.split("T")[0] || "",
     purchase_cost: asset.purchase_cost ?? "",
+    depreciation_method: asset.depreciation_method || "",
+    useful_life_years: asset.useful_life_years ?? "",
     vendor: asset.vendor || "",
     invoice_number: asset.invoice_number || "",
     invoice_date: asset.invoice_date?.split("T")[0] || "",
     scrap_value: asset.scrap_value ?? "",
-    warranty_expiry: asset.warranty_expiry?.split("T")[0] || "", // ★ Added
+    warranty_expiry: asset.warranty_expiry?.split("T")[0] || "",
     serial_number: asset.serial_number || "",
     model_number: asset.model_number || "",
     brand: asset.brand || "",
@@ -80,6 +86,20 @@ function assetToForm(asset) {
     amc_vendor: asset.amc_vendor || "",
     amc_expiry_date: asset.amc_expiry_date?.split("T")[0] || "",
   };
+}
+
+// ── Build ancestor path [ rootId, …, leafId ] from a flat category list ───────
+function buildCategoryPath(categories, leafId) {
+  if (!leafId || !categories.length) return [];
+  const map = {};
+  categories.forEach((c) => (map[c.id] = c));
+  const path = [];
+  let cur = map[Number(leafId)];
+  while (cur) {
+    path.unshift(cur.id);
+    cur = cur.parent_category_id ? map[cur.parent_category_id] : null;
+  }
+  return path;
 }
 
 export const useAssets = () => {
@@ -106,17 +126,21 @@ export const useAssets = () => {
   const [form, setForm] = useState(INITIAL_FORM);
   const [formErrors, setFormErrors] = useState({});
 
+  // ── Category cascade path ─────────────────────────────────────────────────
+  const [categoryPath, setCategoryPath] = useState([]);
+
   const [locations, setLocations] = useState([]);
   const [allDepartments, setAllDepartments] = useState([]);
   const [filteredDepartments, setFilteredDepartments] = useState([]);
+  const [allEmployees, setAllEmployees] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [dropdownsLoading, setDropdownsLoading] = useState(false);
   const dropdownsFetchedRef = useRef(false);
 
   const [filterDepartments, setFilterDepartments] = useState([]);
 
-  // ── Fetch assets ──────────────────────────────────────────────────────────────
+  // ── Fetch assets ──────────────────────────────────────────────────────────
   const fetchAssets = useCallback(async () => {
     setLoading(true);
     const params = {
@@ -143,7 +167,7 @@ export const useAssets = () => {
     fetchAssets();
   }, [fetchAssets]);
 
-  // ── Fetch dropdowns — cached ──────────────────────────────────────────────────
+  // ── Fetch dropdowns — cached ──────────────────────────────────────────────
   const fetchDropdowns = useCallback(async (force = false) => {
     if (dropdownsFetchedRef.current && !force) return;
     setDropdownsLoading(true);
@@ -156,12 +180,19 @@ export const useAssets = () => {
     if (locRes.success) setLocations(locRes.data || []);
     if (deptRes.success) setAllDepartments(deptRes.data || []);
     if (catRes.success) setCategories(catRes.data || []);
-    if (empRes.success) setEmployees(empRes.data || []);
+    if (empRes.success) setAllEmployees(empRes.data || []);
     dropdownsFetchedRef.current = true;
     setDropdownsLoading(false);
   }, []);
 
-  // ── Form location → department cascade ───────────────────────────────────────
+  // ── When editing: rebuild categoryPath once categories are loaded ─────────
+  useEffect(() => {
+    if (editingAsset && categories.length > 0) {
+      setCategoryPath(buildCategoryPath(categories, editingAsset.category_id));
+    }
+  }, [editingAsset, categories]);
+
+  // ── Form location → department cascade ────────────────────────────────────
   useEffect(() => {
     if (!allDepartments.length) return;
     if (form.location_id) {
@@ -169,9 +200,7 @@ export const useAssets = () => {
         (d) => String(d.location_id) === String(form.location_id),
       );
       setFilteredDepartments(depts);
-      const valid = depts.find(
-        (d) => String(d.id) === String(form.department_id),
-      );
+      const valid = depts.find((d) => String(d.id) === String(form.department_id));
       if (!valid) setForm((prev) => ({ ...prev, department_id: "" }));
     } else {
       setFilteredDepartments([]);
@@ -180,7 +209,29 @@ export const useAssets = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.location_id, allDepartments]);
 
-  // ── Filter location → department cascade ─────────────────────────────────────
+  // ── Form department → employee cascade ────────────────────────────────────
+  useEffect(() => {
+    if (!allEmployees.length) return;
+    if (form.department_id) {
+      const emps = allEmployees.filter(
+        (e) => String(e.department_id) === String(form.department_id),
+      );
+      setFilteredEmployees(emps);
+      // Clear assigned employee if they don't belong to the new department
+      const valid = emps.find(
+        (e) => String(e.id) === String(form.assigned_employee_id),
+      );
+      if (!valid && form.assigned_employee_id) {
+        setForm((prev) => ({ ...prev, assigned_employee_id: "" }));
+      }
+    } else {
+      setFilteredEmployees([]);
+      setForm((prev) => ({ ...prev, assigned_employee_id: "" }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.department_id, allEmployees]);
+
+  // ── Filter location → department cascade ─────────────────────────────────
   useEffect(() => {
     if (!allDepartments.length) return;
     if (filters.locationId) {
@@ -189,9 +240,7 @@ export const useAssets = () => {
       );
       setFilterDepartments(depts);
       if (filters.departmentId) {
-        const valid = depts.find(
-          (d) => String(d.id) === String(filters.departmentId),
-        );
+        const valid = depts.find((d) => String(d.id) === String(filters.departmentId));
         if (!valid) setFilters((prev) => ({ ...prev, departmentId: "" }));
       }
     } else {
@@ -224,26 +273,49 @@ export const useAssets = () => {
     if (formErrors[key]) setFormErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
+  // ── Category cascade handler ──────────────────────────────────────────────
+  const handleCategoryChange = (path) => {
+    setCategoryPath(path);
+    const leafId = path.length > 0 ? path[path.length - 1] : "";
+    setForm((prev) => ({ ...prev, category_id: leafId }));
+    if (formErrors.category_id)
+      setFormErrors((prev) => ({ ...prev, category_id: "" }));
+  };
+
   const validateForm = () => {
     const errors = {};
+
     if (!form.asset_name?.trim()) errors.asset_name = "Asset name is required.";
     if (!form.category_id) errors.category_id = "Category is required.";
+    if (!form.asset_type) errors.asset_type = "Asset type is required.";
+
     if (!form.location_id) errors.location_id = "Location is required.";
     if (!form.department_id) errors.department_id = "Department is required.";
-    if (!form.purchase_date)
-      errors.purchase_date = "Purchase date is required.";
+
+    if (!form.purchase_date) errors.purchase_date = "Purchase date is required.";
     if (!form.purchase_cost && form.purchase_cost !== 0)
       errors.purchase_cost = "Purchase cost is required.";
-    else if (
-      isNaN(Number(form.purchase_cost)) ||
-      Number(form.purchase_cost) < 0
-    )
+    else if (isNaN(Number(form.purchase_cost)) || Number(form.purchase_cost) < 0)
       errors.purchase_cost = "Enter a valid purchase cost.";
+
+    if (!form.depreciation_method)
+      errors.depreciation_method = "Depreciation method is required.";
+    if (!form.useful_life_years && form.useful_life_years !== 0)
+      errors.useful_life_years = "Useful life is required.";
+    else if (
+      form.useful_life_years !== "" &&
+      (isNaN(Number(form.useful_life_years)) ||
+        Number(form.useful_life_years) < 1 ||
+        Number(form.useful_life_years) > 99)
+    )
+      errors.useful_life_years = "Enter a valid number (1–99).";
+
     if (
       form.scrap_value !== "" &&
       (isNaN(Number(form.scrap_value)) || Number(form.scrap_value) < 0)
     )
       errors.scrap_value = "Enter a valid scrap value.";
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -252,6 +324,7 @@ export const useAssets = () => {
     assetName: form.asset_name.trim(),
     description: form.description?.trim() || "",
     categoryId: Number(form.category_id),
+    assetType: form.asset_type,
     locationId: Number(form.location_id),
     departmentId: Number(form.department_id),
     assignedEmployeeId: form.assigned_employee_id
@@ -259,11 +332,13 @@ export const useAssets = () => {
       : null,
     purchaseDate: form.purchase_date,
     purchaseCost: Number(form.purchase_cost),
+    depreciationMethod: form.depreciation_method,
+    usefulLifeYears: Number(form.useful_life_years),
     vendor: form.vendor?.trim() || "",
     invoiceNumber: form.invoice_number?.trim() || "",
     invoiceDate: form.invoice_date || null,
     scrapValue: form.scrap_value !== "" ? Number(form.scrap_value) : null,
-    warrantyExpiry: form.warranty_expiry || null, // ★ Added
+    warrantyExpiry: form.warranty_expiry || null,
     serialNumber: form.serial_number?.trim() || "",
     modelNumber: form.model_number?.trim() || "",
     brand: form.brand?.trim() || "",
@@ -277,7 +352,7 @@ export const useAssets = () => {
     amcExpiryDate: form.amc_expiry_date || null,
   });
 
-  // ── Open add drawer ───────────────────────────────────────────────────────────
+  // ── Open add drawer ───────────────────────────────────────────────────────
   const openAddDrawer = () => {
     if (!canManage) {
       toast.error("You don't have permission to add assets.");
@@ -286,39 +361,43 @@ export const useAssets = () => {
     setEditingAsset(null);
     setForm(INITIAL_FORM);
     setFormErrors({});
+    setCategoryPath([]);
+    setFilteredDepartments([]);
+    setFilteredEmployees([]);
     fetchDropdowns();
     setDrawerOpen(true);
   };
 
-  // ── Open edit drawer ──────────────────────────────────────────────────────────
+  // ── Open edit drawer ──────────────────────────────────────────────────────
   const openEditDrawer = async (asset) => {
     if (!canManage) {
       toast.error("You don't have permission to edit assets.");
       return;
     }
-
     setEditingAsset(asset);
     setForm(assetToForm(asset));
     setFormErrors({});
+    setCategoryPath(buildCategoryPath(categories, asset.category_id));
     setDrawerOpen(true);
     fetchDropdowns();
 
-    // Fetch full detail and silently update the form
+    // Fetch full detail and silently update
     const res = await getAssetByIdApi(asset.id);
     if (res.success) {
       setEditingAsset(res.data);
       setForm(assetToForm(res.data));
+      setCategoryPath(buildCategoryPath(categories, res.data.category_id));
     }
   };
 
-  // ── Open view modal ───────────────────────────────────────────────────────────
+  // ── Open view modal ───────────────────────────────────────────────────────
   const openViewModal = async (asset) => {
     const res = await getAssetByIdApi(asset.id);
     setSelectedAsset(res.success ? res.data : asset);
     setViewModalOpen(true);
   };
 
-  // ── Open delete modal ─────────────────────────────────────────────────────────
+  // ── Open delete modal ─────────────────────────────────────────────────────
   const openDeleteModal = (asset) => {
     if (!canAdmin) {
       toast.error("You don't have permission to delete assets.");
@@ -333,12 +412,16 @@ export const useAssets = () => {
     setEditingAsset(null);
     setForm(INITIAL_FORM);
     setFormErrors({});
+    setCategoryPath([]);
+    setFilteredDepartments([]);
+    setFilteredEmployees([]);
   };
 
   const closeViewModal = () => {
     setViewModalOpen(false);
     setSelectedAsset(null);
   };
+
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
     setSelectedAsset(null);
@@ -379,7 +462,7 @@ export const useAssets = () => {
   };
 
   const handleDelete = async (asset) => {
-    const target = asset || selectedAsset; // ← use passed asset, fallback to state
+    const target = asset || selectedAsset;
     if (!target) return;
     setIsSubmitting(true);
     const res = await deleteAssetApi(target.id);
@@ -415,11 +498,15 @@ export const useAssets = () => {
     formErrors,
     handleFormChange,
     handleSubmit,
+    // ── Category cascade ──────────────────────────────────────────────────
+    categoryPath,
+    handleCategoryChange,
+    // ─────────────────────────────────────────────────────────────────────
     locations,
     allDepartments,
     filteredDepartments,
+    filteredEmployees,          // ← department-scoped employee list for the form
     categories,
-    employees,
     dropdownsLoading,
     openAddDrawer,
     openEditDrawer,

@@ -228,10 +228,12 @@ export function useEmployees() {
     setDeletingEmployee(emp);
   }
 
-  async function handleDelete() {
-    if (!deletingEmployee) return;
+  // ✅ Fix: accepts empId directly — avoids stale closure on deletingEmployee
+  async function handleDelete(empId) {
+    const id = empId ?? deletingEmployee?.id;
+    if (!id) return;
     setDeleting(true);
-    const res = await deleteEmployeeApi(deletingEmployee.id);
+    const res = await deleteEmployeeApi(id);
     if (res.success) {
       toast.success("Employee deleted");
       setDeletingEmployee(null);

@@ -55,7 +55,7 @@ export default function DepartmentsPage() {
   }
 
   function confirmToggleStatus(dept) {
-    const active = dept.is_active;
+    const active = dept.is_active === true || dept.is_active === 1;
     setConfirm({
       title: active ? "Deactivate Department?" : "Activate Department?",
       message: active
@@ -72,7 +72,8 @@ export default function DepartmentsPage() {
   }
 
   function confirmDelete(dept) {
-    openDeleteModal(dept);
+    // ✅ Fix: removed openDeleteModal(dept) — was causing stale closure
+    // Pass dept.id directly so closure always has the correct id
     setConfirm({
       title: "Delete Department?",
       message: "Department will be soft deleted. Linked data remains intact.",
@@ -81,7 +82,7 @@ export default function DepartmentsPage() {
       confirmColor: "red",
       onConfirm: () => {
         closeConfirm();
-        handleDelete();
+        handleDelete(dept.id); // ✅ id captured directly, never stale
       },
     });
   }

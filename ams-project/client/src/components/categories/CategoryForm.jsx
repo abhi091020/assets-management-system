@@ -47,19 +47,8 @@ function Spinner() {
   return (
     <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
       <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8z"
-        />
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
       </svg>
       Checking...
     </div>
@@ -94,28 +83,12 @@ function SectionHeader({ title, isOpen, onToggle, statusDot }) {
         ${isOpen ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"}`}
       >
         {isOpen ? (
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2.5}
-          >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
           </svg>
         ) : (
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4v16m8-8H4"
-            />
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
         )}
       </div>
@@ -270,19 +243,12 @@ function TypeToggle({ value, onChange }) {
                 strokeWidth={1.8}
               >
                 {iconPath.map((d, i) => (
-                  <path
-                    key={i}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d={d}
-                  />
+                  <path key={i} strokeLinecap="round" strokeLinejoin="round" d={d} />
                 ))}
               </svg>
             </div>
             <div>
-              <p
-                className={`text-xs font-semibold ${active ? c.text : "text-gray-600"}`}
-              >
+              <p className={`text-xs font-semibold ${active ? c.text : "text-gray-600"}`}>
                 {label}
               </p>
               <p className="text-xs text-gray-400 leading-tight">{sub}</p>
@@ -291,18 +257,8 @@ function TypeToggle({ value, onChange }) {
               <div
                 className={`w-4 h-4 rounded-full ${c.check} flex items-center justify-center flex-shrink-0`}
               >
-                <svg
-                  className="w-2.5 h-2.5 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={3}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             )}
@@ -320,18 +276,8 @@ function CloseBtn({ onClick }) {
       onClick={onClick}
       className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
     >
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M6 18L18 6M6 6l12 12"
-        />
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
   );
@@ -341,19 +287,8 @@ function SpinLabel({ label }) {
   return (
     <>
       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8z"
-        />
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
       </svg>
       {label}
     </>
@@ -387,7 +322,6 @@ export default function CategoryForm({
   // ── Edit mode state ───────────────────────────────────────────────────────
   const [editName, setEditName] = useState("");
   const [editAssetType, setEditAssetType] = useState(null);
-  // For editing a main category: optional add-subcategory section
   const [editSubOpen, setEditSubOpen] = useState(false);
   const [editSubName, setEditSubName] = useState("");
   const [editSubType, setEditSubType] = useState(null);
@@ -399,11 +333,8 @@ export default function CategoryForm({
   useEffect(() => {
     if (open) {
       if (isEdit) {
-        // FIX: always load category_name into editName (works for both main & subcat)
         setEditName(editingCategory.category_name || "");
-        // FIX: load actual asset_type from DB record — null/Movable/Static
         setEditAssetType(editingCategory.asset_type ?? null);
-        // Reset add-sub section
         setEditSubOpen(false);
         setEditSubName("");
         setEditSubType(null);
@@ -489,15 +420,19 @@ export default function CategoryForm({
   // EDIT MODE
   // ══════════════════════════════════════════════════════════════════════════
   if (isEdit) {
+    // isSubCat = this category has a parent (depth >= 1)
     const isSubCat = !!editingCategory.parent_category_id;
 
-    // Existing subcategories under this main cat (for chips preview)
-    const existingSubsForEdit = !isSubCat
-      ? allCategories.filter((c) => c.parent_category_id === editingCategory.id)
-      : [];
+    // Label for the "add child" section depends on depth
+    const addChildLabel = isSubCat ? "Add Sub-subcategory" : "Add Subcategory";
+
+    // Existing direct children of this category (for chips preview)
+    const existingChildren = allCategories.filter(
+      (c) => c.parent_category_id === editingCategory.id,
+    );
 
     const saveLabel = editSubName.trim()
-      ? "Save & Add Subcategory"
+      ? `Save & ${addChildLabel}`
       : "Save Changes";
 
     return (
@@ -524,16 +459,16 @@ export default function CategoryForm({
                 onSubmit(e, {
                   mode: "edit",
                   catName: editName.trim(),
+                  // Asset type applies to subcats and sub-subcats (any non-root)
                   assetType: isSubCat ? editAssetType : null,
-                  // Pass add-sub data only for main cat edits
-                  newSubName:
-                    !isSubCat && editSubName.trim() ? editSubName.trim() : null,
-                  newSubType: !isSubCat ? editSubType : null,
+                  // ✅ Allow adding children at ANY depth (not just root)
+                  newSubName: editSubName.trim() || null,
+                  newSubType: editSubType,
                 });
               }}
             >
               <div className="px-6 divide-y divide-gray-100">
-                {/* ── Name field ──────────────────────────────── */}
+                {/* ── Name field ── */}
                 <div className="py-5">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {isSubCat ? "Subcategory" : "Category"} Name{" "}
@@ -551,7 +486,7 @@ export default function CategoryForm({
                   />
                 </div>
 
-                {/* ── Type toggle — subcats only ───────────────── */}
+                {/* ── Type toggle — for subcats and sub-subcats only ── */}
                 {isSubCat && (
                   <div className="py-5">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
@@ -567,62 +502,63 @@ export default function CategoryForm({
                   </div>
                 )}
 
-                {/* ── Add Subcategory section — main cats only ─── */}
-                {!isSubCat && (
-                  <div className="py-1">
-                    <SectionHeader
-                      title="Add Subcategory"
-                      isOpen={editSubOpen}
-                      onToggle={() => {
-                        setEditSubOpen((v) => !v);
-                        if (editSubOpen) {
-                          setEditSubName("");
-                          setEditSubType(null);
-                        }
-                      }}
-                      statusDot={editSubName.trim() ? "ok" : null}
-                    />
-                    {editSubOpen && (
-                      <div className="pb-5 space-y-4">
-                        {/* Existing subcats chips */}
-                        {existingSubsForEdit.length > 0 && (
-                          <div>
-                            <p className="text-xs text-gray-400 mb-1.5">
-                              Already exists:
-                            </p>
-                            <SubChips subs={existingSubsForEdit} />
-                          </div>
-                        )}
-                        {existingSubsForEdit.length === 0 && (
-                          <div className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200">
-                            <p className="text-xs text-blue-700 font-medium">
-                              No subcategories yet — add one below
-                            </p>
-                          </div>
-                        )}
+                {/* ── Add child section — available at ALL depths ── */}
+                {/* ✅ Fix: removed !isSubCat restriction — subcats can now have children */}
+                <div className="py-1">
+                  <SectionHeader
+                    title={addChildLabel}
+                    isOpen={editSubOpen}
+                    onToggle={() => {
+                      setEditSubOpen((v) => !v);
+                      if (editSubOpen) {
+                        setEditSubName("");
+                        setEditSubType(null);
+                      }
+                    }}
+                    statusDot={editSubName.trim() ? "ok" : null}
+                  />
+                  {editSubOpen && (
+                    <div className="pb-5 space-y-4">
+                      {/* Existing children chips */}
+                      {existingChildren.length > 0 ? (
                         <div>
-                          <p className="text-xs font-medium text-gray-500 mb-1.5">
-                            Subcategory Name{" "}
-                            <span className="text-red-400">*</span>
+                          <p className="text-xs text-gray-400 mb-1.5">
+                            Already exists:
                           </p>
-                          <input
-                            type="text"
-                            value={editSubName}
-                            onChange={(e) => setEditSubName(e.target.value)}
-                            autoComplete="off"
-                            maxLength={100}
-                            placeholder="e.g. Laptop, AC, Server Rack"
-                            className={editSubName.trim() ? okCls : normal}
-                          />
+                          <SubChips subs={existingChildren} />
                         </div>
-                        <TypePills
-                          value={editSubType}
-                          onChange={setEditSubType}
+                      ) : (
+                        <div className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200">
+                          <p className="text-xs text-blue-700 font-medium">
+                            No children yet — add one below
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 mb-1.5">
+                          Name <span className="text-red-400">*</span>
+                        </p>
+                        <input
+                          type="text"
+                          value={editSubName}
+                          onChange={(e) => setEditSubName(e.target.value)}
+                          autoComplete="off"
+                          maxLength={100}
+                          placeholder={
+                            isSubCat
+                              ? "e.g. Gaming Laptop, MacBook Pro"
+                              : "e.g. Laptop, AC, Server Rack"
+                          }
+                          className={editSubName.trim() ? okCls : normal}
                         />
                       </div>
-                    )}
-                  </div>
-                )}
+                      <TypePills
+                        value={editSubType}
+                        onChange={setEditSubType}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </form>
           </div>
@@ -653,7 +589,7 @@ export default function CategoryForm({
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // CREATE MODE
+  // CREATE MODE (unchanged)
   // ══════════════════════════════════════════════════════════════════════════
   const topLevel = allCategories.filter((c) => !c.parent_category_id);
   const matchedCat = catResolved
@@ -762,7 +698,7 @@ export default function CategoryForm({
         <div className="overflow-y-auto flex-1">
           <form id="cat-create-form" onSubmit={handleSubmit}>
             <div className="px-6 divide-y divide-gray-100">
-              {/* ── Category input ───────────────────────────── */}
+              {/* ── Category input ── */}
               <div className="py-4">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
                   Category
@@ -779,14 +715,11 @@ export default function CategoryForm({
                 />
                 {catChecking && catInput.trim() && <Spinner />}
                 {!catChecking && catStatus && (
-                  <StatusMsg
-                    type={catStatus.type}
-                    message={catStatus.message}
-                  />
+                  <StatusMsg type={catStatus.type} message={catStatus.message} />
                 )}
               </div>
 
-              {/* ── Subcategory section ──────────────────────── */}
+              {/* ── Subcategory section ── */}
               <div className="py-1">
                 <SectionHeader
                   title={
@@ -812,16 +745,13 @@ export default function CategoryForm({
                         <SubChips subs={existingSubs} />
                       </div>
                     )}
-                    {matchedCat &&
-                      existingSubs.length === 0 &&
-                      !catChecking && (
-                        <div className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200">
-                          <p className="text-xs text-blue-700 font-medium">
-                            No subcategories yet under "
-                            {matchedCat.category_name}"
-                          </p>
-                        </div>
-                      )}
+                    {matchedCat && existingSubs.length === 0 && !catChecking && (
+                      <div className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200">
+                        <p className="text-xs text-blue-700 font-medium">
+                          No subcategories yet under "{matchedCat.category_name}"
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <p className="text-xs font-medium text-gray-500 mb-1.5">
                         Subcategory Name <span className="text-red-400">*</span>
@@ -837,16 +767,10 @@ export default function CategoryForm({
                       />
                       {subChecking && subInput.trim() && <Spinner />}
                       {!subChecking && subStatus && (
-                        <StatusMsg
-                          type={subStatus.type}
-                          message={subStatus.message}
-                        />
+                        <StatusMsg type={subStatus.type} message={subStatus.message} />
                       )}
                     </div>
-                    <TypePills
-                      value={subAssetType}
-                      onChange={setSubAssetType}
-                    />
+                    <TypePills value={subAssetType} onChange={setSubAssetType} />
                   </div>
                 )}
               </div>

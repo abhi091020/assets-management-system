@@ -38,8 +38,8 @@ export default function AssetsPage() {
     handleSubmit,
     locations,
     filteredDepartments,
+    filteredEmployees,
     categories,
-    employees,
     dropdownsLoading,
     openAddDrawer,
     openEditDrawer,
@@ -49,6 +49,8 @@ export default function AssetsPage() {
     closeViewModal,
     closeDeleteModal,
     handleDelete,
+    categoryPath,
+    handleCategoryChange,
   } = useAssets();
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
@@ -65,7 +67,7 @@ export default function AssetsPage() {
   const [confirm, setConfirm] = useState(null);
   const closeConfirm = () => setConfirm(null);
 
-  // ── Form save intercept — handleSubmit() takes no args ────────────────────
+  // ── Form save intercept ───────────────────────────────────────────────────
   const [pendingSubmit, setPendingSubmit] = useState(false);
 
   function requestSubmit() {
@@ -133,8 +135,10 @@ export default function AssetsPage() {
         locations={locations}
         filteredDepartments={filteredDepartments}
         categories={categories}
-        employees={employees}
+        employees={filteredEmployees}
         dropdownsLoading={dropdownsLoading}
+        categoryPath={categoryPath}
+        onCategoryChange={handleCategoryChange}
       />
 
       {/* Confirm: create / update */}

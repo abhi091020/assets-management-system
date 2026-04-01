@@ -21,6 +21,12 @@ export default function CategoriesPage() {
     totalPages,
     setPage,
     allCategories,
+    // ✅ server-side search + filter
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    // form
     formOpen,
     editingCategory,
     form,
@@ -33,14 +39,18 @@ export default function CategoriesPage() {
     closeForm,
     handleChange,
     handleSubmit,
+    // view
     viewingCategory,
     setViewingCategory,
+    // delete
     deletingCategory,
     deleting,
     openDeleteModal,
     handleDelete,
     setDeletingCategory,
+    // toggle
     handleToggleStatus,
+    // refresh
     refreshAll,
   } = useCategories();
 
@@ -66,11 +76,10 @@ export default function CategoriesPage() {
     try {
       // ── Edit mode ──────────────────────────────────────────────────────────
       if (p.mode === "edit") {
-        // 1. Update the category name / type
         const res = await updateCategoryApi(editingCategory.id, {
           categoryName: p.catName,
           parentCategoryId: editingCategory.parent_category_id || null,
-          assetType: p.assetType, // null is valid — saves NULL in DB
+          assetType: p.assetType,
         });
 
         if (!res.success) {
@@ -80,7 +89,7 @@ export default function CategoriesPage() {
           return;
         }
 
-        // 2. If a new subcategory was also provided (main cat edit only), create it
+        // Optionally create a child under the edited category
         if (p.newSubName) {
           const subRes = await createCategoryApi({
             categoryName: p.newSubName,
@@ -89,11 +98,11 @@ export default function CategoriesPage() {
           });
           if (subRes.success) {
             toast.success(
-              `Category updated & subcategory "${p.newSubName}" added`,
+              `Category updated & "${p.newSubName}" added`,
             );
           } else {
             toast.warning(
-              `Category updated but subcategory failed: ${subRes.message}`,
+              `Category updated but child failed: ${subRes.message}`,
             );
           }
         } else {
@@ -114,7 +123,7 @@ export default function CategoriesPage() {
         res = await createCategoryApi({
           categoryName: p.catName,
           parentCategoryId: null,
-          assetType: null, // main cats always null
+          assetType: null,
         });
         if (res.success) toast.success(`Category "${p.catName}" created`);
         else toast.error(res.message || "Failed to create category");
@@ -135,9 +144,7 @@ export default function CategoriesPage() {
           assetType: p.assetType,
         });
         if (res.success)
-          toast.success(
-            `Subcategory "${p.subName}" added under "${p.catName}"`,
-          );
+          toast.success(`"${p.subName}" added under "${p.catName}"`);
         else toast.error(res.message || "Failed to create subcategory");
       }
 
@@ -153,20 +160,18 @@ export default function CategoriesPage() {
     }
   }
 
-  // ── Confirmation modal details ─────────────────────────────────────────────
+  // ── Confirm modal details ──────────────────────────────────────────────────
   function getConfirmDetails(p) {
     if (!p) return { title: "", message: "", subText: "", label: "Confirm" };
     if (p.mode === "edit") {
       const hasNewSub = !!p.newSubName;
       return {
-        title: hasNewSub ? "Update & Add Subcategory?" : "Update Category?",
+        title: hasNewSub ? "Update & Add Child?" : "Update Category?",
         message: hasNewSub
-          ? `Save changes to "${p.catName}" and add subcategory "${p.newSubName}"?`
+          ? `Save changes to "${p.catName}" and add "${p.newSubName}"?`
           : `Save changes to "${p.catName}"?`,
         subText:
-          hasNewSub && p.newSubType
-            ? `New subcategory type: ${p.newSubType}`
-            : "",
+          hasNewSub && p.newSubType ? `New child type: ${p.newSubType}` : "",
         label: "Update",
       };
     }
@@ -196,7 +201,8 @@ export default function CategoriesPage() {
 
   // ── Status toggle confirm ──────────────────────────────────────────────────
   function confirmToggleStatus(cat) {
-    const active = cat.is_active;
+    // ✅ Handles SQL Server integers (1/0) and booleans
+    const active = cat.is_active === true || cat.is_active === 1;
     setConfirm({
       title: active ? "Deactivate Category?" : "Activate Category?",
       message: active
@@ -213,8 +219,8 @@ export default function CategoriesPage() {
   }
 
   // ── Delete confirm ─────────────────────────────────────────────────────────
+  // ✅ passes cat directly — delete bug already fixed in useCategories
   function confirmDelete(cat) {
-    openDeleteModal(cat);
     setConfirm({
       title: "Delete Category?",
       message: "Category will be soft deleted. Linked assets remain intact.",
@@ -242,6 +248,11 @@ export default function CategoriesPage() {
         onPageChange={setPage}
         canAdmin={canAdmin}
         allCategories={allCategories}
+        // ✅ server-side search + filter passed to table
+        search={search}
+        setSearch={setSearch}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
         onAdd={canAdmin ? openAddForm : undefined}
         onView={(cat) => setViewingCategory(cat)}
         onEdit={openEditForm}

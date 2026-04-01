@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Eye,
   Pencil,
@@ -220,39 +219,29 @@ const styles = {
   },
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LocationTable
+// Props:
+//   locations      — array from server (already paginated + filtered)
+//   search         — string  from useLocations hook
+//   setSearch      — setter  from useLocations hook  (triggers server-side search)
+//   statusFilter   — string  from useLocations hook  ("" | "active" | "inactive")
+//   setStatusFilter— setter  from useLocations hook  (triggers server-side filter)
+//   onAdd / onView / onEdit / onBlock / onDelete — action handlers
+// ─────────────────────────────────────────────────────────────────────────────
 const LocationTable = ({
   locations = [],
+  search = "",
+  setSearch,
+  statusFilter = "",
+  setStatusFilter,
   onAdd,
   onView,
   onEdit,
   onBlock,
   onDelete,
 }) => {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-
-  const isActive = (loc) =>
-    loc.is_active === true || loc.status?.toLowerCase() === "active";
-
-  const filtered = locations.filter((loc) => {
-    const matchSearch =
-      !search ||
-      (loc.name || loc.location_name)
-        ?.toLowerCase()
-        .includes(search.toLowerCase()) ||
-      (loc.address || loc.address_line1)
-        ?.toLowerCase()
-        .includes(search.toLowerCase()) ||
-      loc.city?.toLowerCase().includes(search.toLowerCase()) ||
-      loc.state?.toLowerCase().includes(search.toLowerCase());
-
-    const matchStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && isActive(loc)) ||
-      (statusFilter === "inactive" && !isActive(loc));
-
-    return matchSearch && matchStatus;
-  });
+  const isActive = (loc) => loc.is_active === true || loc.is_active === 1;
 
   return (
     <div style={styles.page}>
@@ -265,7 +254,7 @@ const LocationTable = ({
           <div>
             <h1 style={styles.pageTitle}>Locations</h1>
             <p style={styles.pageSubtitle}>
-              Manage Office and location across your organisation
+              Manage offices and locations across your organisation
             </p>
           </div>
         </div>
@@ -288,13 +277,14 @@ const LocationTable = ({
       <div style={styles.card}>
         {/* ── Controls row ── */}
         <div style={styles.controlsRow}>
-          {/* Search */}
+
+          {/* Search — drives server-side search via hook */}
           <div style={styles.searchWrapper}>
             <input
               type="text"
               placeholder="Search locations..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => setSearch?.(e.target.value)}
               style={styles.searchInput}
               onFocus={(e) => {
                 e.target.style.borderColor = C.primary;
@@ -310,14 +300,14 @@ const LocationTable = ({
             </span>
           </div>
 
-          {/* Status filter */}
+          {/* Status filter — drives server-side filter via hook */}
           <div style={styles.filterWrapper}>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusFilter?.(e.target.value)}
               style={{ ...styles.filterSelect, paddingRight: "36px" }}
             >
-              <option value="all">All Status</option>
+              <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
@@ -341,14 +331,14 @@ const LocationTable = ({
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {locations.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={styles.emptyRow}>
                     No locations found.
                   </td>
                 </tr>
               ) : (
-                filtered.map((loc, idx) => (
+                locations.map((loc, idx) => (
                   <tr
                     key={loc.id ?? idx}
                     style={{
@@ -363,24 +353,25 @@ const LocationTable = ({
                         idx % 2 === 1 ? C.rowZebra : C.white)
                     }
                   >
+                    {/* Location name + address */}
                     <td style={styles.td}>
                       <div style={styles.locationName}>
-                        {loc.name || loc.location_name}
+                        {loc.location_name}
                       </div>
-                      {(loc.address || loc.address_line1) && (
+                      {loc.address && (
                         <div style={styles.locationSub}>
-                          {(loc.address || loc.address_line1).length > 32
-                            ? (loc.address || loc.address_line1).slice(0, 32) +
-                              "..."
-                            : loc.address || loc.address_line1}
+                          {loc.address.length > 32
+                            ? loc.address.slice(0, 32) + "..."
+                            : loc.address}
                         </div>
                       )}
                     </td>
-                    <td style={styles.td}>{loc.city}</td>
-                    <td style={styles.td}>{loc.state}</td>
-                    <td style={styles.td}>
-                      {loc.pincode || loc.pin_code || "—"}
-                    </td>
+
+                    <td style={styles.td}>{loc.city || "—"}</td>
+                    <td style={styles.td}>{loc.state || "—"}</td>
+                    <td style={styles.td}>{loc.pin_code || "—"}</td>
+
+                    {/* Status badge */}
                     <td style={{ ...styles.td, textAlign: "center" }}>
                       <span style={styles.badge(isActive(loc))}>
                         <span
@@ -390,6 +381,8 @@ const LocationTable = ({
                         {isActive(loc) ? "Active" : "Inactive"}
                       </span>
                     </td>
+
+                    {/* Action buttons */}
                     <td style={{ ...styles.td, padding: "13px 8px" }}>
                       <div style={styles.actionsCell}>
                         <button
@@ -397,8 +390,7 @@ const LocationTable = ({
                           onClick={() => onView?.(loc)}
                           title="View"
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(0,0,0,0.06)";
+                            e.currentTarget.style.background = "rgba(0,0,0,0.06)";
                             e.currentTarget.style.transform = "scale(1.1)";
                           }}
                           onMouseLeave={(e) => {
@@ -408,13 +400,13 @@ const LocationTable = ({
                         >
                           <Eye size={16} />
                         </button>
+
                         <button
                           style={styles.actionBtn("#2563EB")}
                           onClick={() => onEdit?.(loc)}
                           title="Edit"
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(37,99,235,0.08)";
+                            e.currentTarget.style.background = "rgba(37,99,235,0.08)";
                             e.currentTarget.style.transform = "scale(1.1)";
                           }}
                           onMouseLeave={(e) => {
@@ -424,13 +416,13 @@ const LocationTable = ({
                         >
                           <Pencil size={15} />
                         </button>
+
                         <button
                           style={styles.actionBtn("#D97706")}
                           onClick={() => onBlock?.(loc)}
-                          title="Block"
+                          title={isActive(loc) ? "Deactivate" : "Activate"}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(217,119,6,0.08)";
+                            e.currentTarget.style.background = "rgba(217,119,6,0.08)";
                             e.currentTarget.style.transform = "scale(1.1)";
                           }}
                           onMouseLeave={(e) => {
@@ -440,13 +432,13 @@ const LocationTable = ({
                         >
                           <Ban size={15} />
                         </button>
+
                         <button
                           style={styles.actionBtn("#DC2626")}
                           onClick={() => onDelete?.(loc)}
                           title="Delete"
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(220,38,38,0.08)";
+                            e.currentTarget.style.background = "rgba(220,38,38,0.08)";
                             e.currentTarget.style.transform = "scale(1.1)";
                           }}
                           onMouseLeave={(e) => {

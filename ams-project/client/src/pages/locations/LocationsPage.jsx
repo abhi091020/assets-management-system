@@ -18,6 +18,12 @@ export default function LocationsPage() {
     page,
     totalPages,
     setPage,
+    // ── search & filter (server-side) ──
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    // ── form ──
     formOpen,
     editingLocation,
     form,
@@ -29,13 +35,16 @@ export default function LocationsPage() {
     closeForm,
     handleChange,
     handleSubmit,
+    // ── view ──
     viewingLocation,
     setViewingLocation,
+    // ── delete ──
     deletingLocation,
     deleting,
     openDeleteModal,
     handleDelete,
     setDeletingLocation,
+    // ── toggle status ──
     handleToggleStatus,
   } = useLocations();
 
@@ -43,7 +52,7 @@ export default function LocationsPage() {
   const [confirm, setConfirm] = useState(null);
   const closeConfirm = () => setConfirm(null);
 
-  // ── Form save intercept ───────────────────────────────────────────────────
+  // ── Form save intercept (confirm before submit) ───────────────────────────
   const [pendingSubmit, setPendingSubmit] = useState(false);
 
   function requestSubmit(e) {
@@ -57,7 +66,7 @@ export default function LocationsPage() {
 
   // ── Action wrappers ───────────────────────────────────────────────────────
   function confirmToggleStatus(loc) {
-    const active = loc.is_active;
+    const active = loc.is_active === true || loc.is_active === 1;
     setConfirm({
       title: active ? "Deactivate Location?" : "Activate Location?",
       message: active
@@ -74,7 +83,6 @@ export default function LocationsPage() {
   }
 
   function confirmDelete(loc) {
-    openDeleteModal(loc);
     setConfirm({
       title: "Delete Location?",
       message:
@@ -84,13 +92,14 @@ export default function LocationsPage() {
       confirmColor: "red",
       onConfirm: () => {
         closeConfirm();
-        handleDelete();
+        handleDelete(loc.id);
       },
     });
   }
 
   return (
     <>
+      {/* ── Main table ── */}
       <LocationTable
         locations={locations}
         loading={loading}
@@ -99,13 +108,20 @@ export default function LocationsPage() {
         totalPages={totalPages}
         onPageChange={setPage}
         canAdmin={canAdmin}
+        // server-side search & filter
+        search={search}
+        setSearch={setSearch}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        // actions
         onAdd={canAdmin ? openAddForm : undefined}
         onView={(loc) => setViewingLocation(loc)}
         onEdit={openEditForm}
-        onToggleStatus={confirmToggleStatus}
+        onBlock={confirmToggleStatus}   // ← fixed: was onToggleStatus
         onDelete={confirmDelete}
       />
 
+      {/* ── Add / Edit form ── */}
       <LocationForm
         open={formOpen}
         onClose={closeForm}
@@ -118,7 +134,7 @@ export default function LocationsPage() {
         submitting={submitting}
       />
 
-      {/* Confirm: create / update */}
+      {/* ── Confirm: create / update ── */}
       <ConfirmModal
         open={pendingSubmit}
         title={editingLocation ? "Update Location?" : "Create Location?"}
@@ -135,12 +151,13 @@ export default function LocationsPage() {
         loading={submitting}
       />
 
+      {/* ── View modal ── */}
       <LocationViewModal
         location={viewingLocation}
         onClose={() => setViewingLocation(null)}
       />
 
-      {/* Confirm: delete / toggle status */}
+      {/* ── Confirm: delete / toggle status ── */}
       <ConfirmModal
         open={!!confirm}
         title={confirm?.title}
