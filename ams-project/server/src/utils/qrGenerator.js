@@ -95,3 +95,12 @@ export const deleteQRFile = (relativePath) => {
     console.warn(`[QR] Could not delete file: ${relativePath}`);
   }
 };
+/**
+ * generateQRCodesBulk
+ * Generates N QR codes in parallel using Promise.all
+ * @param {number} n
+ * @returns {Promise<Array<{ qrToken: string, qrCodeImagePath: string }>>}
+ */
+export const generateQRCodesBulk = async (n) => {
+  return Promise.all(Array.from({ length: n }, () => generateQRCode()));
+};

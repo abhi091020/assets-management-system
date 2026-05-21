@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useAssets }     from "../../hooks/useAssets";
-import { useBulkAssets } from "../../hooks/useBulkAssets";       // ★ missing
+import { useBulkAssets } from "../../hooks/useBulkAssets";  // ★ NEW
 import useAuthStore      from "../../store/authStore";
 import AssetTable        from "../../components/assets/AssetTable";
 import AssetForm         from "../../components/assets/AssetForm";
 import AssetViewModal    from "../../components/assets/AssetViewModal";
-import BulkAssetModal    from "../../components/assets/BulkAssetModal"; // ★ missing
+import BulkAssetModal    from "../../components/assets/BulkAssetModal";  // ★ NEW
 import ConfirmModal      from "../../components/common/ConfirmModal";
 
 export default function AssetsPage() {
@@ -28,11 +28,11 @@ export default function AssetsPage() {
     categories, dropdownsLoading,
     openAddDrawer, openEditDrawer, openViewModal, openDeleteModal,
     closeDrawer, closeViewModal, closeDeleteModal,
-    handleDelete, refresh,                                        // ★ refresh needed
+    handleDelete, refresh,
     categoryPath, handleCategoryChange,
   } = useAssets();
 
-  // ★ Bulk hook — was completely missing
+  // ★ Bulk registration hook
   const {
     open: bulkOpen, openModal: openBulkModal, closeModal: closeBulkModal,
     step, goToStep2, goToStep3, goBack,
@@ -46,25 +46,20 @@ export default function AssetsPage() {
     isSubmitting: bulkSubmitting, handleSubmit: handleBulkSubmit, result: bulkResult,
   } = useBulkAssets();
 
-  // Refresh asset list after bulk registration closes
+  // ── Refresh asset list after bulk registration closes ─────────────────────
   const handleBulkClose = () => {
     closeBulkModal();
-    if (bulkResult) refresh();
+    if (bulkResult) refresh(); // ★ refresh only if something was registered
   };
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
-
   const hasFilters = !!(
     filters.search || filters.status || filters.categoryId ||
     filters.locationId || filters.departmentId || filters.condition
   );
 
-  const [confirm, setConfirm] = useState(null);
-  const closeConfirm = () => setConfirm(null);
-
+  const [confirm, setConfirm]           = useState(null);
   const [pendingSubmit, setPendingSubmit] = useState(false);
-  function requestSubmit() { setPendingSubmit(true); }
-  function executeSubmit() { setPendingSubmit(false); handleSubmit(); }
 
   function confirmDelete(asset) {
     openDeleteModal(asset);
@@ -74,7 +69,7 @@ export default function AssetsPage() {
       subText: `${asset.asset_code ?? ""} — ${asset.asset_name}`.replace(/^ — /, ""),
       confirmLabel: "Delete",
       confirmColor: "red",
-      onConfirm: () => { closeConfirm(); handleDelete(asset); },
+      onConfirm: () => { setConfirm(null); handleDelete(asset); },
     });
   }
 
@@ -88,19 +83,20 @@ export default function AssetsPage() {
         onEdit={openEditDrawer} onDelete={confirmDelete}
         canManage={canManage} canAdmin={canAdmin}
         onAdd={canManage ? openAddDrawer : undefined}
-        onBulkAdd={canManage ? openBulkModal : undefined}         // ★ was missing
+        onBulkAdd={canManage ? openBulkModal : undefined}  // ★ pass to table
         filters={filters} onSearchChange={handleSearchChange}
         onFilterChange={handleFilterChange}
         locations={locations} categories={categories}
         filterDepartments={filterDepartments}
       />
 
+      {/* Single Asset Form */}
       <AssetForm
         open={drawerOpen} onClose={closeDrawer}
         isEditing={!!editingAsset} editingAsset={editingAsset}
         form={form} formErrors={formErrors}
         onFormChange={handleFormChange}
-        onSubmit={requestSubmit}
+        onSubmit={() => setPendingSubmit(true)}
         isSubmitting={isSubmitting}
         locations={locations} filteredDepartments={filteredDepartments}
         employees={filteredEmployees}
@@ -108,7 +104,7 @@ export default function AssetsPage() {
         categoryPath={categoryPath} onCategoryChange={handleCategoryChange}
       />
 
-      {/* ★ Bulk Asset Modal — was completely missing */}
+      {/* ★ Bulk Asset Modal */}
       <BulkAssetModal
         open={bulkOpen} onClose={handleBulkClose}
         step={step} goToStep2={goToStep2} goToStep3={goToStep3} goBack={goBack}
@@ -130,18 +126,13 @@ export default function AssetsPage() {
       <ConfirmModal
         open={pendingSubmit}
         title={editingAsset ? "Update Asset?" : "Register Asset?"}
-        message={editingAsset ? "Are you sure you want to save these changes?" : "Are you sure you want to register this asset?"}
+        message={editingAsset ? "Save these changes?" : "Register this asset?"}
         subText={form.asset_name}
         confirmLabel={editingAsset ? "Update" : "Register"}
         confirmColor="blue"
-        onConfirm={executeSubmit}
+        onConfirm={() => { setPendingSubmit(false); handleSubmit(); }}
         onCancel={() => setPendingSubmit(false)}
         loading={isSubmitting}
-      />
-
-      <AssetViewModal
-        isOpen={viewModalOpen} onClose={closeViewModal}
-        asset={selectedAsset} canManage={canManage} onEdit={openEditDrawer}
       />
 
       {/* Confirm: delete */}
@@ -150,8 +141,13 @@ export default function AssetsPage() {
         title={confirm?.title} message={confirm?.message}
         subText={confirm?.subText} confirmLabel={confirm?.confirmLabel}
         confirmColor={confirm?.confirmColor} onConfirm={confirm?.onConfirm}
-        onCancel={() => { closeConfirm(); closeDeleteModal(); }}
+        onCancel={() => { setConfirm(null); closeDeleteModal(); }}
         loading={isSubmitting}
+      />
+
+      <AssetViewModal
+        isOpen={viewModalOpen} onClose={closeViewModal}
+        asset={selectedAsset} canManage={canManage} onEdit={openEditDrawer}
       />
     </>
   );

@@ -73,6 +73,22 @@ const styles = {
     whiteSpace: "nowrap",
     boxShadow: "0 4px 14px rgba(139,26,26,0.35)",
   },
+  bulkBtn: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    background: C.white,
+    color: C.primary,
+    border: `1.5px solid ${C.primary}`,
+    borderRadius: "50px",
+    padding: "10px 22px",
+    fontSize: "14px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.2s",
+    whiteSpace: "nowrap",
+    boxShadow: "0 2px 8px rgba(139,26,26,0.12)",
+  },
   card: {
     backgroundColor: C.white,
     borderRadius: "16px",
@@ -262,6 +278,7 @@ export default function AssetTable({
   canManage = false,
   canAdmin = false,
   onAdd,
+  onBulkAdd,           // ★ ADDED
   filters = {},
   onSearchChange,
   onFilterChange,
@@ -349,23 +366,44 @@ export default function AssetTable({
             </p>
           </div>
         </div>
+
+        {/* ★ FIXED — both buttons wrapped in a div */}
         {canManage && (
-          <button
-            style={styles.addBtn}
-            onClick={onAdd}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow =
-                "0 6px 18px rgba(139,26,26,0.45)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow =
-                "0 4px 14px rgba(139,26,26,0.35)";
-            }}
-          >
-            Add Asset <Plus size={16} strokeWidth={2.5} />
-          </button>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            {onBulkAdd && (
+              <button
+                style={styles.bulkBtn}
+                onClick={onBulkAdd}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#FFF5F5";
+                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(139,26,26,0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = C.white;
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(139,26,26,0.12)";
+                }}
+              >
+                <svg style={{ width: 16, height: 16 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Bulk Register
+              </button>
+            )}
+            <button
+              style={styles.addBtn}
+              onClick={onAdd}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 6px 18px rgba(139,26,26,0.45)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 4px 14px rgba(139,26,26,0.35)";
+              }}
+            >
+              Add Asset <Plus size={16} strokeWidth={2.5} />
+            </button>
+          </div>
         )}
       </div>
 
@@ -578,8 +616,7 @@ export default function AssetTable({
                           onClick={() => navigate(`/assets/${asset.id}`)}
                           title="View"
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(0,0,0,0.06)";
+                            e.currentTarget.style.background = "rgba(0,0,0,0.06)";
                             e.currentTarget.style.transform = "scale(1.1)";
                           }}
                           onMouseLeave={(e) => {
@@ -595,8 +632,7 @@ export default function AssetTable({
                             onClick={() => onEdit?.(asset)}
                             title="Edit"
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background =
-                                "rgba(37,99,235,0.08)";
+                              e.currentTarget.style.background = "rgba(37,99,235,0.08)";
                               e.currentTarget.style.transform = "scale(1.1)";
                             }}
                             onMouseLeave={(e) => {
@@ -613,8 +649,7 @@ export default function AssetTable({
                             onClick={() => onDelete?.(asset)}
                             title="Delete"
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background =
-                                "rgba(220,38,38,0.08)";
+                              e.currentTarget.style.background = "rgba(220,38,38,0.08)";
                               e.currentTarget.style.transform = "scale(1.1)";
                             }}
                             onMouseLeave={(e) => {

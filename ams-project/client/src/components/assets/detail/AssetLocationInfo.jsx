@@ -4,9 +4,23 @@ import { AssetInfoCard, DetailRow, IconSvg } from "./AssetInfoCard";
 import { formatDate } from "./detailStyles";
 
 export default function AssetLocationInfo({ asset }) {
-  const assignedTo = asset.employee_name
-    ? `${asset.employee_code ? asset.employee_code + " — " : ""}${asset.employee_name}`
-    : "Unassigned";
+  const isAssigned = !!asset.employee_name;
+
+  const assignedToValue = isAssigned ? (
+    `${asset.employee_code ? asset.employee_code + " — " : ""}${asset.employee_name}`
+  ) : (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: "5px",
+      fontSize: "12px", fontWeight: 600, padding: "3px 10px",
+      borderRadius: "20px", background: "#F1F5F9", color: "#64748B",
+    }}>
+      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+      Unassigned
+    </span>
+  );
 
   return (
     <>
@@ -19,25 +33,17 @@ export default function AssetLocationInfo({ asset }) {
           />
         }
       >
-        <DetailRow idx={0} label="Location" value={asset.location_name} />
-        <DetailRow idx={1} label="Department" value={asset.dept_name} />
-        <DetailRow idx={2} label="Assigned To" value={assignedTo} />
+        <DetailRow idx={0} label="Location"    value={asset.location_name} />
+        <DetailRow idx={1} label="Department"  value={asset.dept_name} />
+        <DetailRow idx={2} label="Assigned To" value={assignedToValue} />
       </AssetInfoCard>
 
       <AssetInfoCard
         title="Audit Trail"
         icon={<IconSvg d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
       >
-        <DetailRow
-          idx={0}
-          label="Created At"
-          value={formatDate(asset.created_at)}
-        />
-        <DetailRow
-          idx={1}
-          label="Last Updated"
-          value={formatDate(asset.updated_at)}
-        />
+        <DetailRow idx={0} label="Created At"   value={formatDate(asset.created_at)} />
+        <DetailRow idx={1} label="Last Updated" value={formatDate(asset.updated_at)} />
       </AssetInfoCard>
     </>
   );
